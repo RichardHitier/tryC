@@ -75,6 +75,14 @@ void d2c(double d, unsigned char **s ){
     memcpy( *s, &d, sizeof(double));
 }
 
+// append anything to the given char pointer, offset
+// char pointer s has to be sufficiently allocated before
+size_t any2char( unsigned char **s, void *any, size_t size, size_t *index){
+    memcpy( *s+*index, any, size);
+    *index+=size;
+    return *index;
+}
+
 // serializing a structure, field by field,
 // append in one unique bytearray
 // return total bytes serialized
@@ -106,12 +114,28 @@ size_t commute(ht_msg_t *theMsg, unsigned char **s){
     return index;
 }
 
-// append anything to the given char pointer, offset
-// char pointer s has to be sufficiently allocated before
-size_t any2char( unsigned char **s, void *any, size_t size, size_t *index){
-    memcpy( *s+*index, any, size);
-    *index+=size;
-    return *index;
+// serializing a structure, field by field,
+// append in one unique bytearray
+// return total bytes serialized
+size_t commute2(ht_msg_t *theMsg, unsigned char **s){
+    *s=(unsigned char *) malloc(sizeof(double));
+    size_t length = 3*16+3*64+16;
+    size_t index = 0;
+    //push sot;
+    any2char(s, &theMsg->sot,  sizeof(theMsg->sot), &index);
+    //push id;
+    any2char(s, &theMsg->id,  sizeof(theMsg->id), &index);
+    //push nb;
+    any2char(s, &theMsg->nb,  sizeof(theMsg->nb), &index);
+    //pushvolt;
+    any2char(s, &theMsg->volt,  sizeof(theMsg->volt), &index);
+    //pushcurr;
+    any2char(s, &theMsg->curr,  sizeof(theMsg->curr), &index);
+    //pushamp;
+    any2char(s, &theMsg->amp,  sizeof(theMsg->amp), &index);
+    //push eot;
+    any2char(s, &theMsg->eot,  sizeof(theMsg->eot), &index);
+    return index;
 }
 
 void d2cV2(double *d, unsigned char **s, size_t nb){
@@ -169,16 +193,21 @@ int main( int argc, char **argv){
     printf("double ");
     pc( s, sizeof(r[0]));
     // serialize an  array of double
-    printf("double array ");
+    printf("double array 1 ");
     d2cV( r, &s, 3);
     pc( s, 3*sizeof(f));
-    printf("double array 2");
+    printf("double array 2 ");
     d2cV2( r, &s, 3);
     pc( s, 3*sizeof(f));
 
     // commute and print a structure
-    printf("struct ");
+    printf("struct 1 ");
     if ( ! mymsg.nb == commute(&mymsg, &s)){
+        return 1;
+    }
+    pc( s, mymsg.nb);
+    printf("struct 2 ");
+    if ( ! mymsg.nb == commute2(&mymsg, &s)){
         return 1;
     }
     pc( s, mymsg.nb);
