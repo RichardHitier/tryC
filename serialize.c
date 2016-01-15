@@ -76,7 +76,8 @@ void d2c(double d, unsigned char **s ){
 }
 
 // serializing a structure, field by field,
-// output in one unique bytearray
+// append in one unique bytearray
+// return total bytes serialized
 size_t commute(ht_msg_t *theMsg, unsigned char **s){
     *s=(unsigned char *) malloc(sizeof(double));
     size_t length = 3*16+3*64+16;
@@ -105,11 +106,25 @@ size_t commute(ht_msg_t *theMsg, unsigned char **s){
     return index;
 }
 
+// append anything to the given char pointer, offset
+// char pointer s has to be sufficiently allocated before
+size_t any2char( unsigned char **s, void *any, size_t size, size_t *index){
+    memcpy( *s+*index, any, size);
+    *index+=size;
+    return *index;
+}
+
+void d2cV2(double *d, unsigned char **s, size_t nb){
+    *s=(unsigned char *) malloc(sizeof(double));
+    size_t i=0;
+    any2char(s, d, sizeof(double), &i);
+    any2char(s, d+1, sizeof(double), &i);
+    any2char(s, d+2, sizeof(double), &i);
+}
+
 // can we just serialize a double array ?
 void d2cV(double *d, unsigned char **s, size_t nb){
-    //int nb = sizeof(d) / sizeof(d[0]),
-     int   i;
-
+    int   i;
     *s=(unsigned char *) malloc(nb*sizeof(d));
 
     for( i=0; i<nb; i++){
@@ -154,8 +169,11 @@ int main( int argc, char **argv){
     printf("double ");
     pc( s, sizeof(r[0]));
     // serialize an  array of double
-    d2cV( r, &s, 3);
     printf("double array ");
+    d2cV( r, &s, 3);
+    pc( s, 3*sizeof(f));
+    printf("double array 2");
+    d2cV2( r, &s, 3);
     pc( s, 3*sizeof(f));
 
     // commute and print a structure
