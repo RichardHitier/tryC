@@ -31,7 +31,7 @@ void showtypessizes(){
 // achitecture
 void pc(unsigned char *s, size_t length){
     int i;
-    printf( "printing %d bytes: ", length);
+    printf( "%d bytes: ", length);
     for( i=0; i<length; i++){
         printf("%02x", s[i]);
     }
@@ -149,17 +149,22 @@ int main( int argc, char **argv){
     ui2c_memcpy(k, &s);
 
 
+    // serialize a double
+    d2c( r[0], &s);
+    printf("double ");
+    pc( s, sizeof(r[0]));
+    // serialize an  array of double
+    d2cV( r, &s, 3);
+    printf("double array ");
+    pc( s, 3*sizeof(f));
+
     // commute and print a structure
-    printf("struct size is: %d\n", sizeof( mymsg));
+    printf("struct ");
     if ( ! mymsg.nb == commute(&mymsg, &s)){
         return 1;
     }
     pc( s, mymsg.nb);
 
-
-    // serialize an  array
-    d2cV( r, &s, 3);
-    pc( s, 3*sizeof(f));
 
     return 0;
 }
